@@ -1,12 +1,11 @@
 - name: Run a simple test (check server is up)
-  run: |
-    # تشغيل التطبيق في الخلفية
-    docker run -d --name test-app -p 5000:5000 ${{ github.repository }}:latest
+      run: |
+        # تشغيل التطبيق في الخلفية
+        docker run -d -p 5000:5000 --name test-app ${{ github.repository }}:latest
 
-    # الانتظار حتى يصبح المنفذ 5000 جاهزاً قبل الاختبار
-    # يجب تثبيت netcat (nc) في Dockerfile، لكن GitHub Actions توفر بعض الأدوات تلقائياً.
-    echo "Waiting for app to start on port 5000..."
-    timeout 30 bash -c 'until curl -s http://localhost:5000; do sleep 1; done'
+        # الانتظار 10 ثواني (ضروري للسماح لسيرفر Flask بالبدء)
+        echo "Waiting 10 seconds for Flask server to start..."
+        sleep 10
 
-    # اختبار النتيجة النهائية (يفترض أن يعرض الرسالة بنجاح)
-    curl http://localhost:5000
+        # اختبار الاتصال بـ curl والتأكد من نجاحه
+        curl --fail http://localhost:5000
