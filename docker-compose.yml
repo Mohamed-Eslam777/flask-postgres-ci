@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    container_name: flask_web_app
+    # لن نعلن عن المنفذ هنا، لأنه سيُعرض عبر الـ proxy
+    depends_on:
+      - db
+    
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: my_app_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # لن نعلن عن المنفذ هنا، لأنها قاعدة بيانات داخلية
+
+  proxy:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80" # المنفذ 80 الآن هو لـ Nginx
+    volumes:
+      # ربط ملف إعداد Nginx الذي أنشأناه
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app # تأكد من أن تطبيق Flask يعمل قبل بدء Nginx
+
+# تعريف Volumes لتخزين البيانات
+volumes:
+  postgres_data:
