@@ -1,11 +1,31 @@
-- name: Run a simple test (check server is up)
-      run: |
-        # تشغيل التطبيق في الخلفية
-        docker run -d -p 5000:5000 --name test-app ${{ github.repository }}:latest
+name: CI Build and Test
 
-        # الانتظار 10 ثواني (ضروري للسماح لسيرفر Flask بالبدء)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build the Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ github.repository }}:latest
+        load: true
+
+    - name: Run a simple test (check server is up)
+      run: |
+        docker run -d -p 5000:5000 --name test-app ${{ github.repository }}:latest
         echo "Waiting 10 seconds for Flask server to start..."
         sleep 10
-
-        # اختبار الاتصال بـ curl والتأكد من نجاحه
         curl --fail http://localhost:5000
