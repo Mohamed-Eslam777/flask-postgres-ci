@@ -1,0 +1,33 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build the Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ github.repository }}:latest
+        load: true # لتحميل الصورة محليا لإجراء الاختبارات
+
+    - name: Run a simple test (check Docker status)
+      run: |
+        # تشغيل التطبيق في الخلفية
+        docker run -d --name test-app ${{ github.repository }}:latest
+        # الانتظار قليلا للتأكد من تشغيل الخادم
+        sleep 5 
+        # اختبار المنفذ للتأكد من أن التطبيق بدأ
+        curl --fail http://localhost:5000 || exit 1
